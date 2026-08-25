@@ -18,9 +18,10 @@ When there's a review waiting for you, the runner:
 3. Sends the review back and posts it on the pull request.
 
 That's all it does. It only acts when there's a review assigned to you; the rest of the time it waits. It
-adds nothing to your system beyond the one binary and a small sign-in file in your home folder. Nothing
-you review is uploaded anywhere by the runner — the code stays on your machine, and the only thing that
-leaves is the finished review.
+adds nothing to your system beyond the one binary and a small sign-in file in your home folder. The code
+is checked out and reviewed **on your machine**; the review is done by **Claude** (so, as with any use of
+Claude, the code you review is processed by Claude to produce the review). The runner itself uploads
+nothing else — it just sends the finished review back to be posted.
 
 ---
 
@@ -93,7 +94,9 @@ see the short **service** notes included with the binary for macOS (launchd), Li
 ## Privacy & what it touches
 
 - It uses **your** existing `claude` and `git` sign-ins — you don't hand over any new credentials.
-- The code it reviews stays **on your machine**; only the finished review is sent back.
+- The code is checked out and reviewed **on your machine**. The review itself is done by **Claude**, so
+  the code you review is processed by Claude (exactly like any other code you'd run Claude on). Beyond
+  that, the runner sends nothing except the finished review.
 - The one file it stores is a sign-in token in `~/.harrier/runner/` (readable only by you).
 - It only reviews repositories you've been set up for, and only when there's a review assigned to you.
 
