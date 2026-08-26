@@ -81,6 +81,22 @@ It will keep running and pick up reviews as they come. Press **Ctrl-C** to stop.
 To keep it always on (so it's there even after a reboot or logout), install it as a background service —
 see the short **service** notes included with the binary for macOS (launchd), Linux (systemd), and Windows.
 
+### Automatic updates
+
+The runner **keeps itself up to date** — on startup and periodically (between reviews, never mid-review), it
+checks for a newer release, and if there is one it downloads it, **verifies a cryptographic signature** (so it
+only ever installs an official build), swaps itself out, and restarts on the new version. You don't have to
+re-download anything. To turn this off, add `"auto_update": false` to your `~/.harrier/runner/config.json`
+(Windows: `%USERPROFILE%\.harrier\runner\config.json`); `"update_check_interval_hours"` tunes how often it
+checks (default 6). If you run it as a background service, the service restarts it onto the new version
+automatically.
+
+> **Windows note:** a running `.exe` can't overwrite itself, so after an update the runner **exits** and relies
+> on the service manager to relaunch the new version. If you started it **interactively** (a bare
+> `harrier-runner run` in a terminal, not as a service), it will simply exit after updating and **won't come
+> back on its own** — install it as a service (see the service notes) so auto-update restarts cleanly, or set
+> `"auto_update": false` if you prefer to update by hand.
+
 ---
 
 ## Stop / remove
