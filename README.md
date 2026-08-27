@@ -73,13 +73,13 @@ Description=Harrier runner
 After=network-online.target
 Wants=network-online.target
 [Service]
-ExecStart=%h/.local/bin/harrier-runner run
+ExecStart=/usr/local/bin/harrier-runner run
 Restart=always
 RestartSec=10
 [Install]
 WantedBy=default.target
 UNIT
-# edit ExecStart if your binary is elsewhere (e.g. /usr/local/bin/harrier-runner)
+# ExecStart above matches the install step; edit it if you put the binary elsewhere
 systemctl --user daemon-reload
 systemctl --user enable --now harrier-runner
 loginctl enable-linger "$USER"     # keep it running while you're logged out
