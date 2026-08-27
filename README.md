@@ -53,9 +53,8 @@ Opens a GitHub device sign-in in your browser, then saves your settings.
 harrier-runner run
 ```
 
-Leave it running; it picks up reviews as they come. Press **Ctrl-C** to stop. For an always-on setup
-that survives reboots (and, on Windows, avoids the console pause), install it as a background service — see
-below.
+Leave it running; it picks up reviews as they come. Press **Ctrl-C** to stop. For an always-on setup that
+survives reboots (Linux/macOS), install it as a background service — see below.
 
 ---
 
@@ -103,18 +102,8 @@ PLIST
 launchctl load -w ~/Library/LaunchAgents/com.harrier.runner.plist
 ```
 
-**Windows** — use a service wrapper that **always restarts** the process, e.g. [nssm](https://nssm.cc):
-
-```bat
-nssm install harrier-runner "C:\path\to\harrier-runner-windows-amd64.exe" run
-nssm set harrier-runner AppExit Default Restart
-nssm start harrier-runner
-```
-
-A real service wrapper is needed on Windows because after an automatic update the runner exits cleanly for
-its supervisor to relaunch on the new version (see below). Task Scheduler ("at log on", "restart on
-failure") also survives reboots, but it will **not** relaunch after an update (a clean exit isn't a
-failure), so you'd have to start it again by hand after each update.
+**Windows** — a built-in background-service install is coming. For now, run `harrier-runner run` in a
+terminal and leave the window open.
 
 ---
 
