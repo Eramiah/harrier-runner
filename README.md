@@ -43,67 +43,34 @@ chmod +x harrier-runner && sudo mv harrier-runner /usr/local/bin/harrier-runner
 harrier-runner init --server <server-address> --client-id <client-id>
 ```
 
-Opens a GitHub device sign-in in your browser, then saves your settings.
+This opens a GitHub device sign-in in your browser, saves your settings, and **installs a background
+service that starts now and on every boot/login** (systemd on Linux, launchd on macOS, a native Windows
+Service on Windows) — so the runner is always up and "runner offline" is a non-issue. Add `--no-service`
+to skip the service and run it by hand.
+
+> **Windows:** registering the service needs administrator rights — run `init` (or `install-service`) from
+> an **elevated** PowerShell/Command Prompt. Not elevated? `init --no-service` onboards you; then run
+> `harrier-runner run` in a terminal.
 
 ---
 
-## Run
+## Everyday use
+
+The `harrier-runner` command is a thin controller/viewer — the **service** does the actual reviewing.
 
 ```sh
-harrier-runner run
+harrier-runner                  # read-only view: is the service running? + how to see activity
+harrier-runner status --follow  # tail live activity until Ctrl-C
+harrier-runner start|stop|restart
+harrier-runner uninstall        # remove the service (keeps your settings)
 ```
 
-Leave it running; it picks up reviews as they come. Press **Ctrl-C** to stop. For an always-on setup that
-survives reboots (Linux/macOS), install it as a background service — see below.
+Running bare `harrier-runner` shows status and, if the service is installed but stopped, starts it. It
+never starts a second copy — only one runner per machine. (On Windows, viewing status needs no elevation;
+`start`/`stop`/`install-service`/`uninstall` do — run them from an elevated prompt.)
 
----
-
-## Run as a background service (recommended)
-
-Onboard first (`harrier-runner init …`), then install the service for your OS.
-
-**Linux (systemd user service):**
-
-```sh
-mkdir -p ~/.config/systemd/user
-cat > ~/.config/systemd/user/harrier-runner.service <<'UNIT'
-[Unit]
-Description=Harrier runner
-After=network-online.target
-Wants=network-online.target
-[Service]
-ExecStart=/usr/local/bin/harrier-runner run
-Restart=always
-RestartSec=10
-[Install]
-WantedBy=default.target
-UNIT
-# ExecStart above matches the install step; edit it if you put the binary elsewhere
-systemctl --user daemon-reload
-systemctl --user enable --now harrier-runner
-loginctl enable-linger "$USER"     # keep it running while you're logged out
-```
-
-**macOS (launchd agent):**
-
-```sh
-cat > ~/Library/LaunchAgents/com.harrier.runner.plist <<'PLIST'
-<?xml version="1.0" encoding="UTF-8"?>
-<plist version="1.0"><dict>
-  <key>Label</key><string>com.harrier.runner</string>
-  <key>ProgramArguments</key>
-  <array><string>/usr/local/bin/harrier-runner</string><string>run</string></array>
-  <key>RunAtLoad</key><true/>
-  <key>KeepAlive</key><true/>
-  <key>StandardErrorPath</key><string>/tmp/harrier-runner.log</string>
-  <key>StandardOutPath</key><string>/tmp/harrier-runner.log</string>
-</dict></plist>
-PLIST
-launchctl load -w ~/Library/LaunchAgents/com.harrier.runner.plist
-```
-
-**Windows** — a built-in background-service install is coming. For now, run `harrier-runner run` in a
-terminal and leave the window open.
+**Already running an older runner?** After it self-updates, run `harrier-runner install-service` once to
+adopt the service — no re-onboarding, no cleanup.
 
 ---
 
@@ -114,17 +81,18 @@ release, verifies its signature, and swaps itself in. Turn it off with `"auto_up
 `~/.harrier/runner/config.json` (Windows: `%USERPROFILE%\.harrier\runner\config.json`);
 `"update_check_interval_hours"` sets the cadence (default 6).
 
-> **Windows:** a running `.exe` can't overwrite itself, so after an update the runner exits and the
-> service manager relaunches it. If you started it interactively (not as a service), start it again after
-> an update — or run it as a service so it relaunches automatically.
+> **Windows:** a running `.exe` can't overwrite itself, so after an update the runner exits and the Windows
+> Service restarts it automatically (the service is configured to restart even on a clean exit). If you
+> started it interactively in a terminal instead, start it again after an update.
 
 ---
 
 ## Stop / remove
 
-- **Stop:** Ctrl-C, or stop the background service.
-- **Remove:** delete the `harrier-runner` binary and the `~/.harrier/runner/` folder (Windows:
-  `%USERPROFILE%\.harrier\runner`).
+- **Stop / start:** `harrier-runner stop` / `harrier-runner start` (Windows: from an elevated prompt).
+- **Remove the service:** `harrier-runner uninstall` (keeps your settings so you can re-add it).
+- **Remove everything:** after `uninstall`, delete the `harrier-runner` binary and the
+  `~/.harrier/runner/` folder (Windows: `%USERPROFILE%\.harrier\runner`).
 
 ---
 
