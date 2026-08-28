@@ -59,11 +59,14 @@ to skip the service and run it by hand.
 The `harrier-runner` command is a thin controller/viewer — the **service** does the actual reviewing.
 
 ```sh
-harrier-runner                  # read-only view: is the service running? + how to see activity
-harrier-runner status --follow  # tail live activity until Ctrl-C
+harrier-runner                  # read-only view: service state + current job + recent reviews
+harrier-runner status --follow  # tail the live log until Ctrl-C
 harrier-runner start|stop|restart
 harrier-runner uninstall        # remove the service (keeps your settings)
 ```
+
+The view shows whether the service is running, what it's reviewing right now (with elapsed time and a
+"last seen" liveness stamp), and the last few review outcomes.
 
 Running bare `harrier-runner` shows status and, if the service is installed but stopped, starts it. It
 never starts a second copy — only one runner per machine. (On Windows, viewing status needs no elevation;
