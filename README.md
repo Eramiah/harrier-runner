@@ -79,6 +79,10 @@ menu-bar item / Windows startup / Linux autostart); `--uninstall-autostart` remo
 tray-enabled build only — it refuses on the pure-Go binary rather than register a login item that would do
 nothing.)
 
+**Windows one-step install:** `install-harrier-tray.ps1` downloads + verifies the Windows tray binary,
+installs it, adds a **Start Menu** shortcut, registers autostart, and launches it:
+`powershell -ExecutionPolicy Bypass -File .\install-harrier-tray.ps1` (`-Uninstall` to remove).
+
 Running bare `harrier-runner` shows status and, if the service is installed but stopped, starts it. It
 never starts a second copy — only one runner per machine. (On Windows, viewing status needs no elevation;
 `start`/`stop`/`install-service`/`uninstall` do — run them from an elevated prompt.)
