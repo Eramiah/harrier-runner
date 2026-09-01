@@ -62,26 +62,31 @@ The `harrier-runner` command is a thin controller/viewer — the **service** doe
 harrier-runner                  # read-only view: service state + current job + recent reviews
 harrier-runner status --follow  # tail the live log until Ctrl-C
 harrier-runner start|stop|restart
-harrier-runner tray             # native menu-bar/systray viewer (tray-enabled build only)
+harrier-runner tray             # menu-bar/systray viewer (built in on Windows; separate build on macOS/Linux)
 harrier-runner uninstall        # remove the service (keeps your settings)
 ```
 
 The view shows whether the service is running, what it's reviewing right now (with elapsed time and a
 "last seen" liveness stamp), and the last few review outcomes.
 
-**Tray viewer (optional):** `harrier-runner tray` shows the same info as a native menu-bar/systray icon that
-sits in the background — a state glyph (polling · reviewing · stopped · error) with the current job on hover.
-It's read-only (start/stop/restart still go through the CLI). The tray needs a native, GUI-enabled build; the
-standard prebuilt binary is pure-Go and prints how to rebuild if you run `tray` on it.
+**Tray viewer (optional):** `harrier-runner tray` shows the same info as a native menu-bar/systray icon
+(the Harrier eagle) that sits in the background; hover for the current job and state. It's read-only
+(start/stop/restart still go through the CLI).
 
-Run `harrier-runner tray --install-autostart` to have the tray launch automatically at every login (macOS
-menu-bar item / Windows startup / Linux autostart); `--uninstall-autostart` removes it. (Available on a
-tray-enabled build only — it refuses on the pure-Go binary rather than register a login item that would do
-nothing.)
+- **Windows:** built right into the standard `harrier-runner.exe` — just run `harrier-runner tray`, no separate
+  download. Because it's the same binary, **the tray auto-updates with the runner**.
+- **macOS / Linux:** the tray needs a GUI toolkit (Cocoa / GTK), so it ships as a separate `harrier-runner-tray`
+  build; the standard binary prints how to get it if you run `tray` on it.
 
-**Windows one-step install:** `install-harrier-tray.ps1` downloads + verifies the Windows tray binary,
-installs it, adds a **Start Menu** shortcut, registers autostart, and launches it:
-`powershell -ExecutionPolicy Bypass -File .\install-harrier-tray.ps1` (`-Uninstall` to remove).
+`harrier-runner tray --install-autostart` makes it launch at every login (Windows startup / macOS menu-bar /
+Linux autostart); `--uninstall-autostart` removes it. On Windows you can also add a Start Menu shortcut:
+
+```powershell
+$exe = (Get-Command harrier-runner).Source
+$lnk = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Harrier Runner Tray.lnk"
+$s = (New-Object -ComObject WScript.Shell).CreateShortcut($lnk)
+$s.TargetPath = $exe; $s.Arguments = "tray"; $s.Save()
+```
 
 Running bare `harrier-runner` shows status and, if the service is installed but stopped, starts it. It
 never starts a second copy — only one runner per machine. (On Windows, viewing status needs no elevation;
