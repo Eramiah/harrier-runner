@@ -74,25 +74,50 @@ $Tmp = Join-Path $env:TEMP ("harrier-tray-" + [System.Guid]::NewGuid().ToString(
 New-Item -ItemType Directory -Force -Path $Tmp | Out-Null
 $ExeTmp  = Join-Path $Tmp $Asset
 $SumsTmp = Join-Path $Tmp "SHA256SUMS"
+$ManTmp  = Join-Path $Tmp "manifest.json"
+$SigTmp  = Join-Path $Tmp "manifest.json.sig"
 Write-Host "Downloading $Asset ($Version)..."
 & curl.exe -fsSL -o $ExeTmp  "$Base/$Asset"
 if ($LASTEXITCODE -ne 0) { throw "download failed: $Base/$Asset" }
 & curl.exe -fsSL -o $SumsTmp "$Base/SHA256SUMS"
 if ($LASTEXITCODE -ne 0) { throw "download failed: $Base/SHA256SUMS" }
+& curl.exe -fsSL -o $ManTmp  "$Base/manifest.json"
+if ($LASTEXITCODE -ne 0) { throw "download failed: $Base/manifest.json" }
+& curl.exe -fsSL -o $SigTmp  "$Base/manifest.json.sig" | Out-Null  # for out-of-band signature verification
 
-# --- verify SHA-256 against the published SHA256SUMS ---
+# --- integrity: the SHA-256 must match BOTH SHA256SUMS and the ed25519-SIGNED manifest.json, and the two
+#     must AGREE. This ties the check to the signed release record (manifest.json is what manifest.json.sig
+#     signs), so a tamper that touches only the plain SHA256SUMS is caught. ---
+$got = (Get-FileHash $ExeTmp -Algorithm SHA256).Hash.ToLower()
+
 $line = Select-String -Path $SumsTmp -Pattern ([regex]::Escape($Asset)) | Select-Object -First 1
 if (-not $line) { throw "no SHA256SUMS entry for $Asset" }
-$want = ($line.Line.Trim() -split '\s+')[0].ToLower()
-if ([string]::IsNullOrWhiteSpace($want)) { throw "could not parse checksum from SHA256SUMS line: $($line.Line)" }
-$got  = (Get-FileHash $ExeTmp -Algorithm SHA256).Hash.ToLower()
-if ($want -ne $got) { throw "checksum mismatch for ${Asset}: expected $want, got $got" }
-Write-Host "Checksum OK: $got"
+$sumsHash = ($line.Line.Trim() -split '\s+')[0].ToLower()
+
+$assets  = (Get-Content $ManTmp -Raw | ConvertFrom-Json).assets
+$manProp = $assets.PSObject.Properties[$Asset]
+if (-not $manProp) { throw "manifest.json has no entry for $Asset" }
+$manHash = ([string]$manProp.Value).ToLower()
+
+if ($sumsHash -ne $got)     { throw "checksum mismatch for ${Asset}: SHA256SUMS=$sumsHash, file=$got" }
+if ($manHash -ne $got)      { throw "checksum mismatch for ${Asset}: manifest.json=$manHash, file=$got" }
+if ($sumsHash -ne $manHash) { throw "SHA256SUMS and manifest.json disagree for ${Asset} — refusing" }
+Write-Host "Integrity OK — SHA-256 matches SHA256SUMS and the signed manifest: $got"
+
+# --- authenticity note (honest boundary) ---
+# The release also ships manifest.json.sig, an ed25519 signature over manifest.json by the Harrier signing key
+# (the runner verifies it on self-update). Windows PowerShell has NO native Ed25519, so this installer does not
+# verify that signature in-line (adding a crypto dependency would defeat a lightweight, no-deps installer).
+# Integrity above rests on HTTPS + the GitHub release. To additionally verify AUTHENTICITY, check
+# manifest.json.sig against the Harrier public key with any ed25519 verifier before trusting the binary; the
+# signature file is saved next to the installed binary (below) for that purpose.
+Write-Warning "Signature (manifest.json.sig) not verified in-installer (no native PowerShell Ed25519); verify it out-of-band for authenticity beyond HTTPS/GitHub."
 
 # --- stop any running tray, then install to the stable location ---
 Stop-Tray
 New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
 Move-Item -Force $ExeTmp $ExePath
+Copy-Item -Force $SigTmp (Join-Path $InstallDir "manifest.json.sig") -ErrorAction SilentlyContinue
 Remove-Item -Recurse -Force $Tmp -ErrorAction SilentlyContinue
 Write-Host "Installed: $ExePath"
 
