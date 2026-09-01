@@ -62,11 +62,22 @@ The `harrier-runner` command is a thin controller/viewer — the **service** doe
 harrier-runner                  # read-only view: service state + current job + recent reviews
 harrier-runner status --follow  # tail the live log until Ctrl-C
 harrier-runner start|stop|restart
+harrier-runner tray             # native menu-bar/systray viewer (tray-enabled build only)
 harrier-runner uninstall        # remove the service (keeps your settings)
 ```
 
 The view shows whether the service is running, what it's reviewing right now (with elapsed time and a
 "last seen" liveness stamp), and the last few review outcomes.
+
+**Tray viewer (optional):** `harrier-runner tray` shows the same info as a native menu-bar/systray icon that
+sits in the background — a state glyph (polling · reviewing · stopped · error) with the current job on hover.
+It's read-only (start/stop/restart still go through the CLI). The tray needs a native, GUI-enabled build; the
+standard prebuilt binary is pure-Go and prints how to rebuild if you run `tray` on it.
+
+Run `harrier-runner tray --install-autostart` to have the tray launch automatically at every login (macOS
+menu-bar item / Windows startup / Linux autostart); `--uninstall-autostart` removes it. (Available on a
+tray-enabled build only — it refuses on the pure-Go binary rather than register a login item that would do
+nothing.)
 
 Running bare `harrier-runner` shows status and, if the service is installed but stopped, starts it. It
 never starts a second copy — only one runner per machine. (On Windows, viewing status needs no elevation;
