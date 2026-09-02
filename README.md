@@ -70,16 +70,17 @@ The view shows whether the service is running, what it's reviewing right now (wi
 "last seen" liveness stamp), and the last few review outcomes.
 
 **Tray viewer (optional):** `harrier-runner tray` shows the same info as a native menu-bar/systray icon
-(the Harrier eagle) that sits in the background; hover for the current job and state. It's read-only
-(start/stop/restart still go through the CLI).
+(the Harrier eagle) that sits in the background; hover for the current job and state. It doesn't control
+reviews — start/stop/restart still go through the CLI — but its menu has a one-click **Start at login** toggle.
 
 - **Windows:** built right into the standard `harrier-runner.exe` — just run `harrier-runner tray`, no separate
   download. Because it's the same binary, **the tray auto-updates with the runner**.
 - **macOS / Linux:** the tray needs a GUI toolkit (Cocoa / GTK), so it ships as a separate `harrier-runner-tray`
   build; the standard binary prints how to get it if you run `tray` on it.
 
-`harrier-runner tray --install-autostart` makes it launch at every login (Windows startup / macOS menu-bar /
-Linux autostart); `--uninstall-autostart` removes it. On Windows you can also add a Start Menu shortcut:
+To launch it automatically at every login, either tick **Start at login** in the tray menu (a one-click
+toggle), or run `harrier-runner tray --install-autostart` (`--uninstall-autostart` removes it). On Windows you
+can also add a Start Menu shortcut:
 
 ```powershell
 $exe = (Get-Command harrier-runner).Source
