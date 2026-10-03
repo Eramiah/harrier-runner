@@ -52,6 +52,22 @@ to skip the service and run it by hand.
 > an **elevated** PowerShell/Command Prompt. Not elevated? `init --no-service` onboards you; then run
 > `harrier-runner run` in a terminal.
 
+**Where it installs.** The service (and the tray login item) always run the binary at one fixed per-user path —
+the file self-update keeps current:
+
+| OS | Install path |
+|----|--------------|
+| Windows | `%LOCALAPPDATA%\Programs\harrier-runner\harrier-runner.exe` |
+| Linux | `~/.local/bin/harrier-runner` |
+| macOS | `~/Library/Application Support/harrier-runner/harrier-runner` |
+
+Run `init` / `install-service` / `tray --install-autostart` from wherever you downloaded the binary — it copies
+itself to that path and registers the copy, so a download left in `Downloads` (or a copy dropped in
+`System32`) never becomes the thing the OS runs. It **refuses** to register a binary in a temp folder or a
+`go test` build (`*.test` / `*.test.exe`), since those are deleted and would leave the service unable to start.
+If an existing service or tray login item points at a missing, temporary or stray binary, `harrier-runner`
+flags it (`⚠ MISCONFIGURED`) with the exact fix command.
+
 ---
 
 ## Everyday use
