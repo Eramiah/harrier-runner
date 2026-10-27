@@ -127,6 +127,25 @@ release, verifies its signature, and swaps itself in. Turn it off with `"auto_up
 
 ---
 
+## What the runner reports to Harrier
+
+So Harrier can tell you (and the operator) when your runner is unhealthy — down, crash-looping, out of
+disk, failing reviews — the runner sends a small **diagnostic report** to the central server on each poll and
+on start/stop. It is deliberately **pseudonymous**: it carries your machine's OS/CPU *class* (e.g.
+`darwin`/`arm64`), the runner's uptime, how many times it has restarted and whether the last exit was clean,
+a scrubbed last-error message, poll-backoff, which supervisor runs it, self-update status, the model it uses,
+its process id, and a **random runner id** generated on your machine.
+
+It does **not** send your hostname or your username. Free-text error messages have home-folder paths
+(`/home/…`, `/Users/…`, `C:\Users\…`) redacted to `<user>` **best-effort** before they leave your machine, so
+an incidental path in an error can't reveal your username; the central server scrubs again on receipt. The
+random runner id lets Harrier tell your machines apart without identifying you or them.
+
+Review content is unchanged from before: the runner checks out code and runs the review with **your** Claude
+subscription on **your** machine; central only ever receives the finished `review.json` and these diagnostics.
+
+---
+
 ## Stop / remove
 
 - **Stop / start:** `harrier-runner stop` / `harrier-runner start` (Windows: from an elevated prompt).
